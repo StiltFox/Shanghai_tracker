@@ -1,2 +1,17 @@
 #get_tests
 GET http://127.0.0.1:8000
+
+###
+
+POST http://127.0.0.1:8000/submit
+Content-Type: application/json
+
+{
+    "month": 9,
+    "day": 9,
+    "year": 2024,
+    "players": {
+        "Rick":200,
+        "Edith":10
+    }
+}

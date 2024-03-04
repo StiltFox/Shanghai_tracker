@@ -1,10 +1,10 @@
 use std::{collections::HashMap, io};
-use rocket::{launch, serde::{json::Json, Serialize}};
+use rocket::{launch, serde::{json::Json, Serialize, Deserialize}};
 use uuid::Uuid;
 
 #[macro_use] extern crate rocket;
 
-#[derive(Serialize)]
+#[derive(Serialize,Deserialize)]
 #[serde(crate = "rocket::serde")]
 pub struct Game {
     month: u8,
@@ -30,15 +30,18 @@ fn health_check() -> Json<ApiHealth> {
     Json(output)
 }
 
-fn submit_game_results(results: Game) -> Json<Game> {
-    let mut saved_results = results;
-    saved_results.id = uuid::Uuid::new_v4();
-    
-    Json(saved_results)
+#[post("/submit", data = "<results>")]
+fn submit_game_results(results: Json<Game>) -> Json<Game> {
+    let mut submitted_game = results.into_inner();
+    if submitted_game.id.is_nil() {
+        submitted_game.id = uuid::Uuid::new_v4();
+    }
+
+    Json(submitted_game)
 }
 
 #[launch]
 fn rocket() -> _ {
-    rocket::build().mount("/", routes![health_check])
+    rocket::build().mount("/", routes![health_check, submit_game_results])
         .mount("/health", routes![health_check])
 }
