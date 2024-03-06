@@ -1,11 +1,11 @@
 create table if not exists game (
     hosted date,
-    id binary(16),
+    id varchar(36),
     constraint pk_game primary key(id)
 );
 
 create table if not exists scores (
-    game_id binary(16),
+    game_id varchar(36),
     player varchar(255),
     final_score int,
     constraint pk_scores primary key(game_id,player),

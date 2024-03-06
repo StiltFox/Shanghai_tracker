@@ -3,6 +3,10 @@ GET http://127.0.0.1:8000
 
 ###
 
+GET http://127.0.0.1:8000/all
+
+###
+
 POST http://127.0.0.1:8000/submit
 Content-Type: application/json
 

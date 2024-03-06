@@ -1,11 +1,17 @@
-use rocket::serde::{json::Json, Deserialize, Serialize};
+pub mod database_error;
+
+use rocket::{
+    serde::{json::Json, Deserialize, Serialize},
+    time::{macros::format_description, Date},
+};
+use rocket_db_pools::sqlx::{MySqlConnection, Row};
 use rocket_db_pools::{
     sqlx::{self, Acquire},
     Connection,
 };
 use std::collections::HashMap;
 use uuid::Uuid;
-use rocket_db_pools::sqlx::{Row, Column};
+use database_error::DatabaseError;
 
 use crate::GameDbMysql;
 
@@ -14,15 +20,15 @@ use crate::GameDbMysql;
 pub struct Game {
     month: u8,
     day: u8,
-    year: u32,
+    year: i32,
     id: Option<Uuid>,
-    players: HashMap<String, u32>,
+    players: HashMap<String, i32>,
 }
 
 async fn submit(mut db: Connection<GameDbMysql>, result: Game) -> Result<(), sqlx::Error> {
-    let id = result.id.unwrap_or(Uuid::new_v4()).as_simple().to_string();
+    let id = result.id.unwrap_or(Uuid::new_v4()).to_string();
     let game_insert_statement = format!(
-        "insert into game (id, hosted) values (x'{}','{}-{}-{}');",
+        "insert into game (id, hosted) values ('{}','{}-{}-{}');",
         &id, result.year, result.month, result.day
     );
 
@@ -34,7 +40,7 @@ async fn submit(mut db: Connection<GameDbMysql>, result: Game) -> Result<(), sql
             for player in result.players {
                 sqlx::query(
                     format!(
-                        "insert into scores (game_id, player, final_score) values (x'{}',?,{});",
+                        "insert into scores (game_id, player, final_score) values ('{}',?,{});",
                         &id, player.1
                     )
                     .as_str(),
@@ -61,29 +67,37 @@ pub async fn submit_game_results(
     }
 }
 
-#[get("/all")]
-pub async fn get_all_games(mut db: Connection<GameDbMysql>) -> Result<Json<Vec<Game>>, String> {
-    match sqlx::query("select * from game;").fetch_all(&mut **db).await {
-        Ok(game_id_list) => {
-            let mut output: Vec<Game> = vec![];
+pub async fn fetch_players(
+    db: &mut MySqlConnection,
+    id: &str,
+) -> Result<HashMap<String, i32>, DatabaseError> {
+    let mut output: HashMap<String, i32> = HashMap::new();
+    let players = sqlx::query(format!("select * from scores where game_id = '{}'", id).as_str()).fetch_all(db).await?;
 
-            for row in game_id_list {
-                let id = row.get::<&str, &str>("id");
-                match sqlx::query(format!("select * from player where id = x'{}'", id).as_str())
-                    .fetch_all(&mut **db).await {
-                        Ok(scores) => {
-                            let retrieved_game = Game {
-                                id: Some(uuid::Uuid::parse_str(id)),
-                                month: todo!(),
-                                day: todo!(), year: todo!(), players: todo!() 
-                            };
-                        },
-                        Err(error) => Err(error.to_string())?,
-                    }
-            }
-
-            Ok(Json(output))
-        },
-        Err(error)=> Err(error.to_string())
+    for player in players {
+        output.insert(player.try_get::<String,&str>("player")?, player.try_get::<i32,&str>("final_score")?);
     }
+
+    Ok(output)
+}
+
+#[get("/all")]
+pub async fn get_all_games(mut db: Connection<GameDbMysql>) -> Result<Json<Vec<Game>>, DatabaseError> {
+    let mut output: Vec<Game> = vec![];
+    let game_id_list = sqlx::query("select id, DATE_FORMAT(hosted, '%Y-%m-%d') as hosted from game;").fetch_all(&mut **db).await?;
+    
+    for row in game_id_list {
+        let id = row.try_get::<&str,&str>("id")?;
+        let date = Date::parse(row.try_get::<&str, &str>("hosted")?, format_description!("[year]-[month]-[day]"))?;
+        let players = fetch_players(db.as_mut(), id).await?;
+        output.push(Game {
+            month: date.month().into(),
+            day: date.day(),
+            year: date.year().into(),
+            id: Some(Uuid::try_parse(id)?),
+            players: players,
+        });
+    }
+
+    Ok(Json(output))
 }

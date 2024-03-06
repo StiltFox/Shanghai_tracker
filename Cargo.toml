@@ -19,6 +19,9 @@ features = [
     "sqlx_postgres"
 ]
 
+[dependencies.time]
+version = "0.3.34"
+
 [dependencies.uuid]
 version = "1.7.0"
 features = [
