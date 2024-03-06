@@ -8,7 +8,15 @@ edition = "2021"
 [dependencies.rocket]
 version = "0.5.0"
 features = [
-    "json",               #Enable the use of Json
+    "json"
+]
+
+[dependencies.rocket_db_pools]
+version = "0.1.0"
+features = [
+    "sqlx_sqlite",
+    "sqlx_mysql",
+    "sqlx_postgres"
 ]
 
 [dependencies.uuid]
