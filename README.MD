@@ -10,3 +10,6 @@ Things to add:
  -  better typing for the database
     - right now we're not using Dates or Uuid's in the database because of the difficulty supporting certain data types using the built in instance of Sqlx.
  - more endpoints that calculate player stats, or allow for selection of games based on a date range.
+
+ ## Rocket.toml
+ Although it's not included in this repo, adding a rocket.toml to the running directory of the program will allow you to change the settings of the server and the database it's connecting to. This is not compiled with the program and will be need to be deployed separately.
