@@ -5,7 +5,7 @@ use rocket::launch;
 pub mod game_endpoint;
 pub mod health_endpoint;
 use health_endpoint::health_check;
-use game_endpoint::{submit_game_results,get_all_games};
+use game_endpoint::{submit_game_results,retrieve_all_games,retrieve_games_in_range};
 use rocket_db_pools::{sqlx, Database};
 
 #[derive(Database)]
@@ -14,6 +14,7 @@ pub struct GameDbMysql(sqlx::MySqlPool);
 
 #[launch]
 fn rocket() -> _ {
-    rocket::build().mount("/", routes![health_check, submit_game_results, get_all_games])
+    rocket::build().mount("/", routes![health_check])
         .mount("/health", routes![health_check]).attach(GameDbMysql::init())
+        .mount("/game", routes![submit_game_results, retrieve_all_games, retrieve_games_in_range])
 }

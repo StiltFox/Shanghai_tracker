@@ -1,6 +1,5 @@
 use rocket::serde::{Serialize, Deserialize};
 use rocket_db_pools::sqlx;
-use time::error;
 
 #[derive(Serialize, Deserialize,Responder)]
 #[serde(crate = "rocket::serde")]
@@ -11,14 +10,6 @@ pub struct DatabaseError {
 
 impl From<sqlx::Error> for DatabaseError {
     fn from(value: sqlx::Error) -> Self {
-        DatabaseError {
-            message: value.to_string()
-        }
-    }
-}
-
-impl From<error::Parse> for DatabaseError {
-    fn from(value: error::Parse) -> Self {
         DatabaseError {
             message: value.to_string()
         }

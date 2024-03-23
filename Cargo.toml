@@ -19,14 +19,26 @@ features = [
     "sqlx_postgres"
 ]
 
-[dependencies.time]
-version = "0.3.34"
+[dependencies.sqlx]
+version = "0.7.3"
+features = [
+    "chrono",
+    "uuid"
+]
+
+[dependencies.chrono]
+version = "0.4.35"
+features = [
+    "serde"
+]
 
 [dependencies.uuid]
 version = "1.7.0"
 features = [
-    "v4",                # Lets you generate random UUIDs
-    "fast-rng",          # Use a faster (but still sufficiently random) RNG
-    "macro-diagnostics", # Enable better diagnostics for compile-time UUIDs
+    "v4",
+    "fast-rng",
+    "macro-diagnostics",
     "serde",
 ]
+[dependencies]
+serde = { version = "1.0.197", features = ["derive"] }

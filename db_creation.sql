@@ -1,13 +1,13 @@
 create table if not exists game (
     hosted date,
-    id varchar(36),
+    id binary(16),
     constraint pk_game primary key(id)
 );
 
 create table if not exists scores (
-    game_id varchar(36),
+    game_id binary(16),
     player varchar(255),
-    final_score int,
+    final_score int unsigned,
     constraint pk_scores primary key(game_id,player),
     constraint fk_scores foreign key (game_id) references game(id)
 );
