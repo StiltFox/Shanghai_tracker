@@ -5,6 +5,7 @@ use database_error::DatabaseError;
 use game_data::{get_all_games, submit, Game};
 use rocket::serde::json::Json;
 use rocket_db_pools::Connection;
+use crate::game_endpoint::game_data::{get_summery_from_time_range, Summary};
 
 use crate::GameDbMysql;
 
@@ -33,4 +34,9 @@ pub async fn retrieve_games_in_range(
     end: Option<String>,
 ) -> Result<Json<Vec<Game>>, DatabaseError> {
     Ok(Json(get_all_games_in_range(db, start, end).await?))
+}
+
+#[get("/summary")]
+pub async fn get_summary(db: Connection<GameDbMysql>) -> Result<Json<Summary>, DatabaseError> {
+    Ok(Json(get_summery_from_time_range(db).await?))
 }
